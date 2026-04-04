@@ -1,15 +1,17 @@
 # auth file routes and functions 
 from fastapi import APIRouter, HTTPException, Depends
-from core.database import db_dependency
-from schemas import UserRegister
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from starlette import status
+from datetime import datetime, timedelta
+from jose import jwt, JWTError
+from app.core.config import settings
+from app.core.redis import redis_client
+from app.core.database import db_dependency
+from app.auth.schemas import UserRegister
+from app.models.models import User
 import bcrypt
 import secrets
-from models.models import User
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from datetime import datetime, timedelta
-from core.config import settings
-from jose import jwt, JWTError
+
 
 
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.TOKEN_ACCESS_EXPIRE_MINUTES
