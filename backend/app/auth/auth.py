@@ -6,7 +6,14 @@ from starlette import status
 import bcrypt
 from models.models import User
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from datetime import datetime, timedelta
+from core.config import settings
+from jose import jwt, JWTError
 
+
+TOKEN_ACCESS_EXPIRE_MINUTES = settings.TOKEN_ACCESS_EXPIRE_MINUTES
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM
 
 
 router = APIRouter(
@@ -71,5 +78,12 @@ def login(db: db_dependency, credentials: OAuth2PasswordRequestForm = Depends())
 # return both tokens 
 
 # generate access token function 
+def generate_access_token(data: dict):
+    to_encode = data.copy
+    expires = datetime.utcnow() + timedelta(minutes=TOKEN_ACCESS_EXPIRE_MINUTES)
+    to_encode.update({"exp": expires})
+    access_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return {"access_token": access_token,
+            "token_type": "bearer"}
 
 
