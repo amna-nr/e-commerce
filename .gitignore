@@ -1,0 +1,51 @@
+# ========================
+# BACKEND
+# ========================
+
+# Virtual environment
+backend/venv/
+backend/.venv/
+
+# Python cache
+backend/__pycache__/
+backend/**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Environment variables
+backend/.env
+backend/.env.*
+
+# Alembic (keep migrations tracked)
+# backend/alembic/versions/ ← leave this alone
+
+# Logs
+backend/**/*.log
+
+# ========================
+# FRONTEND (React)
+# ========================
+
+frontend/node_modules/
+frontend/.env
+frontend/.env.*
+frontend/build/
+frontend/dist/
+frontend/.next/
+
+# ========================
+# DOCKER / ROOT
+# ========================
+
+.env
+.env.*
+*.log
+
+# ========================
+# OS / IDE
+# ========================
+
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
