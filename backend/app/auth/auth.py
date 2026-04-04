@@ -28,6 +28,8 @@ router = APIRouter(
     tags=["auth"]
 )
 
+oauth2_scheme = OAuth2PasswordBearer(tokenURL="/auth/login")
+
 # register endpoint
 @router.post("/register")
 async def register(db: db_dependency, credentials: UserRegister):
@@ -145,8 +147,41 @@ async def refresh(db: db_dependency, refresh_token: str = Cookie(...)):
     }
 
 
+# user verification function for sensitive routes
+async def get_current_user_protected(db: db_dependency, token: str = Depends(oauth2_scheme)):
+
+    # decode jwt using secret key
+    payload = decode_jwt(token, SECRET_KEY, ALGORITHM)
+
+    # get user id
+    user_id = payload.get("id")
+
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    # check if user exists 
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    return user
+
+
 # user verification function for every request
-# user verification function for sensitive routes 
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+
+    # decode jwt using secret key
+    payload = decode_jwt(token, SECRET_KEY, ALGORITHM)
+
+
 
 # generate access token function 
 def generate_access_token(data: dict):
@@ -157,6 +192,17 @@ def generate_access_token(data: dict):
     return {"access_token": access_token,
             "token_type": "bearer"}
 
+
+# decode jwt token using secret key
+def decode_jwt(token: str, SECRET_KEY: str, ALGORITHM: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithm=ALGORITHM)
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
+    return payload 
 
 
 
