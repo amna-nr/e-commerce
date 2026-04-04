@@ -92,7 +92,7 @@ async def login(db: db_dependency, credentials: OAuth2PasswordRequestForm = Depe
 
 # refresh endpoint
 @router.post("/refresh")
-async def refresh(db: db_dependency, refresh_token: str = Cookie()):
+async def refresh(db: db_dependency, refresh_token: str = Cookie(...)):
    
     # check if refresh token exists in redis 
     if refresh_token is None: 
