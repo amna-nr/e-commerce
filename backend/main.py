@@ -8,8 +8,17 @@ from starlette import status
 from redis import Redis 
 import httpx
 import json
+from contextlib import asynccontextmanager
+from app.core.redis import redis_client
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await redis_client.ping()
+    yield 
+    await redis_client.aclose()
+
+app = FastAPI(lifespan=lifespan)
 
 app.include_router(auth_router)
 

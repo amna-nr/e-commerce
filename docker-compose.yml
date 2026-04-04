@@ -1,20 +1,23 @@
-
-
 services:
-
+ 
   # --- PostgreSQL Database ---
   db:
     image: postgres:16
     restart: always
     environment:
-      POSTGRES_USER: postgres        # matches your DATABASE_URL
-      POSTGRES_PASSWORD: password    # matches your DATABASE_URL
-      POSTGRES_DB: store             # matches your DATABASE_URL
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: store
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+ 
   # --- FastAPI Backend ---
   backend:
     build: ./backend
@@ -22,18 +25,31 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - ./backend/.env               # loads your entire .env file
+      - ./backend/.env
     depends_on:
-      - db
-
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+ 
+  # --- Redis ---
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+ 
   # --- React Frontend ---
   frontend:
-    build: ./frontend/store          # your React project is inside frontend/store
+    build: ./frontend/store
     restart: always
     ports:
       - "80:80"
     depends_on:
       - backend
-
+ 
 volumes:
   postgres_data:
+  redis_data:
