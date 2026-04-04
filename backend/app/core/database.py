@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
-from config import settings
+from backend.app.core.config import settings
 from typing import Annotated
 from fastapi import Depends
 
