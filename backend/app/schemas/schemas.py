@@ -2,11 +2,6 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-class UserRegister(BaseModel):
-    username: str
-    password: str
-    confirm_password: str
-
 class ProductIn(BaseModel):
     title: str
     price: int
