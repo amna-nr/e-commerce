@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException
-from auth import get_current_user, router as auth_router
-from database import db_dependency, create_tables
-from models import User, Product
-from schemas import ProductIn, ProductOut, ProductUpdate
+from backend.app.auth.auth import get_current_user, router as auth_router
+from backend.app.core.database import db_dependency, create_tables
+from backend.app.models.models import User, Product
+from backend.app.schemas.schemas import ProductIn, ProductOut, ProductUpdate
 from fastapi.middleware.cors import CORSMiddleware
 from starlette import status 
 from redis import Redis 
