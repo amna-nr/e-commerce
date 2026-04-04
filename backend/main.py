@@ -1,15 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException
-from backend.app.auth.auth import get_current_user, router as auth_router
-from backend.app.core.database import db_dependency, create_tables
-from backend.app.models.models import User, Product
-from backend.app.schemas.schemas import ProductIn, ProductOut, ProductUpdate
 from fastapi.middleware.cors import CORSMiddleware
 from starlette import status 
-from redis import Redis 
-import httpx
-import json
 from contextlib import asynccontextmanager
 from app.core.redis import redis_client
+
+from app.auth.auth import get_current_user, router as auth_router
+from app.core.database import db_dependency
+from app.models.models import User, Product
+from app.schemas.schemas import ProductIn, ProductOut, ProductUpdate
 
 
 @asynccontextmanager
@@ -40,7 +38,7 @@ def products_list(db: db_dependency, user: User = Depends(get_current_user)):
     return products
 
 @app.post("/products", response_model=list[ProductOut])
-def products_create(product: ProductIn, db: db_dependency, user: User = Depends(get_current_user)):
+async def products_create(product: ProductIn, db: db_dependency, user: User = Depends(get_current_user)):
     new_product = Product(
         title = product.title,
         price = product.price, 
@@ -52,7 +50,7 @@ def products_create(product: ProductIn, db: db_dependency, user: User = Depends(
     return new_product
 
 @app.put("/products/{id}")
-def products_update(id: int, product_update: ProductUpdate, db: db_dependency, user: User = Depends(get_current_user)):
+async def products_update(id: int, product_update: ProductUpdate, db: db_dependency, user: User = Depends(get_current_user)):
 
     product = db.query(Product).filter(Product.id == id).first()
 
@@ -69,7 +67,7 @@ def products_update(id: int, product_update: ProductUpdate, db: db_dependency, u
 
 
 @app.delete("/products/{id}")
-def products_delete(id: int, db: db_dependency, user: User = Depends(get_current_user)):
+async def products_delete(id: int, db: db_dependency, user: User = Depends(get_current_user)):
 
     product = db.query(Product).filter(Product.id == id).first()
 
