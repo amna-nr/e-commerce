@@ -4,6 +4,7 @@ from core.database import db_dependency
 from schemas import UserRegister
 from starlette import status
 import bcrypt
+import secrets
 from models.models import User
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from datetime import datetime, timedelta
@@ -28,7 +29,7 @@ def register(db: db_dependency, credentials: UserRegister):
     # check if passwords match 
     if credentials.password != credentials.confirm_password:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Passwords don't match."
         )
     
@@ -58,14 +59,19 @@ def login(db: db_dependency, credentials: OAuth2PasswordRequestForm = Depends())
         )
     
     # check password in db vs users both hashed
-    if not bcrypt.checkpw(credentials.password.encode("utf-8"), bcrypt.gensalt()):
+    if not bcrypt.checkpw(credentials.password.encode("utf-8"), user.password_hash.encode("utf-8")):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password."
         )
     
-    # generate access token 
+    # generate access token
+    access_token = generate_access_token({"id": user.id,
+                                          "sub": user.username}) 
+    
     # generate refresh token 
+    refresh_token = secrets.token_urlsafe()
+
     # store refresh token in redis 
     # return both tokens 
 
@@ -79,11 +85,13 @@ def login(db: db_dependency, credentials: OAuth2PasswordRequestForm = Depends())
 
 # generate access token function 
 def generate_access_token(data: dict):
-    to_encode = data.copy
+    to_encode = data.copy()
     expires = datetime.utcnow() + timedelta(minutes=TOKEN_ACCESS_EXPIRE_MINUTES)
     to_encode.update({"exp": expires})
     access_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return {"access_token": access_token,
             "token_type": "bearer"}
+
+
 
 
