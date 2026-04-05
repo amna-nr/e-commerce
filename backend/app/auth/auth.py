@@ -34,6 +34,14 @@ oauth2_scheme = OAuth2PasswordBearer(tokenURL="/auth/login")
 @router.post("/register")
 async def register(db: db_dependency, credentials: UserRegister):
 
+    # check if username already exists 
+    result = db.execute(select(User).where(User.username == credentials.username))
+    user = await result.scalar_one_or_none()
+
+    if user: 
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                            detail="Username already exists.")
+
     # check if passwords match 
     if credentials.password != credentials.confirm_password:
         raise HTTPException(
@@ -45,10 +53,11 @@ async def register(db: db_dependency, credentials: UserRegister):
     password_hash = bcrypt.hashpw(credentials.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
     # store username and password in db
-    new_user = User(username= credentials.username, password_hash=password_hash)
+    new_user = User(username= credentials.username,
+                    password_hash=password_hash)
     db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    await db.commit()
+    await db.refresh(new_user)
 
     return {"message": "User has been created."}
 
@@ -181,6 +190,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     # decode jwt using secret key
     payload = decode_jwt(token, SECRET_KEY, ALGORITHM)
 
+    return payload
 
 
 # generate access token function 
@@ -189,14 +199,13 @@ def generate_access_token(data: dict):
     expires = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expires})
     access_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return {"access_token": access_token,
-            "token_type": "bearer"}
+    return access_token
 
 
 # decode jwt token using secret key
 def decode_jwt(token: str, SECRET_KEY: str, ALGORITHM: str):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithm=ALGORITHM)
+        payload = jwt.decode(token, SECRET_KEY, algorithm=[ALGORITHM])
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
