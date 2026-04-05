@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Cookie
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from starlette import status
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 from sqlalchemy import select
 
@@ -122,8 +122,7 @@ async def refresh(db: db_dependency, refresh_token: str = Cookie(...)):
         )
 
     # check if user exists in db
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
+    user = get_user(user_id)
 
     if user is None:
         raise HTTPException(
@@ -172,8 +171,7 @@ async def get_current_user_protected(db: db_dependency, token: str = Depends(oau
         )
 
     # check if user exists 
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
+    user = get_user(user_id)
 
     if user is None:
         raise HTTPException(
@@ -196,7 +194,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 # generate access token function 
 def generate_access_token(data: dict):
     to_encode = data.copy()
-    expires = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expires = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expires})
     access_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return access_token
@@ -205,7 +203,7 @@ def generate_access_token(data: dict):
 # decode jwt token using secret key
 def decode_jwt(token: str, SECRET_KEY: str, ALGORITHM: str):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithm=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -213,5 +211,9 @@ def decode_jwt(token: str, SECRET_KEY: str, ALGORITHM: str):
         )
     return payload 
 
-
+# function to get user from db
+async def get_user (db: db_dependency, id: int):
+    result = await db.execute(select(User).where(User.id == id))
+    user = result.scalar_one_or_none()
+    return user 
 
