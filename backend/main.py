@@ -92,19 +92,17 @@ async def products_update(id: int, product_update: ProductUpdate, db: db_depende
 @app.delete("/products/{id}")
 async def products_delete(id: int, db: db_dependency, user: User = Depends(get_current_user)):
 
-    # get product from db 
-    result = await db.execute(select(Product).where(Product.id == id))
-    product = result.scalar_one_or_none()
+    # delete product directly
+    result = await db.delete(select(Product).where(Product.id == id))
 
-    # check if product exists
-    if product is None:
+    # check how many rows were affected 
+    if result.rowcount == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
             detail="Product not found."
             )
     
-    # delete the product 
-    await db.delete(product)
+    # save changes 
     await db.commit()
 
     return {"message" : "Product has been deleted"}
