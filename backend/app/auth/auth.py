@@ -124,7 +124,7 @@ async def refresh(db: db_dependency, refresh_token: str = Cookie(...)):
         )
 
     # check if user exists in db
-    user = get_user(user_id)
+    user = get_user(db, user_id)
 
     if user is None:
         raise HTTPException(
