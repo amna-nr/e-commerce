@@ -17,8 +17,8 @@ import secrets
 
 
 
-ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
-REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS
+ACCESS_TOKEN_EXPIRES_MINUTES = settings.ACCESS_TOKEN_EXPIRES_MINUTES
+REFRESH_TOKEN_EXPIRES_DAYS = settings.REFRESH_TOKEN_EXPIRES_DAYS
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 
@@ -95,7 +95,7 @@ async def login(db: db_dependency, credentials: OAuth2PasswordRequestForm = Depe
     # store refresh token in redis 
     await redis_client.set(f"refresh:{refresh_token}",
                      user.id,
-                     ex=REFRESH_TOKEN_EXPIRE_DAYS * 86400)
+                     ex=REFRESH_TOKEN_EXPIRES_DAYS * 86400)
     
     # return both tokens 
     return {"access_token": access_token,
@@ -139,7 +139,7 @@ async def refresh(db: db_dependency, refresh_token: str = Cookie(...)):
     await redis_client.set(
         f"refresh:{refresh_token}",
         user.id,
-        ex=REFRESH_TOKEN_EXPIRE_DAYS * 86400
+        ex=REFRESH_TOKEN_EXPIRES_DAYS * 86400
     )
 
     # return both tokens 
@@ -189,7 +189,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 # generate access token function 
 def generate_access_token(data: dict):
     to_encode = data.copy()
-    expires = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expires = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRES_MINUTES)
     to_encode.update({"exp": expires})
     access_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return access_token
