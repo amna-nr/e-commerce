@@ -39,8 +39,10 @@ async def register(db: db_dependency, credentials: UserRegister):
     user = await result.scalar_one_or_none()
 
     if user: 
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE,
-                            detail="Username already exists.")
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Username already exists."
+        )
 
     # check if passwords match 
     if credentials.password != credentials.confirm_password:
@@ -216,4 +218,3 @@ async def get_user (db: db_dependency, id: int):
     result = await db.execute(select(User).where(User.id == id))
     user = result.scalar_one_or_none()
     return user 
-
