@@ -35,8 +35,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenURL="/auth/login")
 async def register(db: db_dependency, credentials: UserRegister):
 
     # check if username already exists 
-    result = db.execute(select(User).where(User.username == credentials.username))
-    user = await result.scalar_one_or_none()
+    result = await db.execute(select(User).where(User.username == credentials.username))
+    user = result.scalar_one_or_none()
 
     if user: 
         raise HTTPException(
