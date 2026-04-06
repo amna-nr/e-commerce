@@ -117,7 +117,7 @@ async def refresh(db: db_dependency, refresh_token: str = Cookie(...)):
         )
 
     # check if user exists in db
-    user = get_user(db, user_id)
+    user = await get_user(db, user_id)
 
     if user is None:
         raise HTTPException(
@@ -166,7 +166,7 @@ async def get_current_user_protected(db: db_dependency, token: str = Depends(oau
         )
 
     # check if user exists 
-    user = get_user(user_id)
+    user = await get_user(db, user_id)
 
     if user is None:
         raise HTTPException(
