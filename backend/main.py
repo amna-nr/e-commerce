@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette import status 
 from contextlib import asynccontextmanager
 from app.core.redis import redis_client
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 from app.auth.auth import get_current_user, router as auth_router
 from app.core.database import db_dependency
@@ -42,7 +42,7 @@ def home():
 @app.get("/products", response_model=list[ProductOut])
 async def products_list(db: db_dependency, user: User = Depends(get_current_user)):
 
-    result = await db.execute(Product)
+    result = await db.execute(select(Product))
     products = result.scalars().all()
     return products
     
@@ -58,6 +58,7 @@ async def products_create(product: ProductIn, db: db_dependency, user: User = De
     )
 
     db.add(new_product)
+
     await db.commit()
     await db.refresh(new_product)
 
@@ -93,7 +94,7 @@ async def products_update(id: int, product_update: ProductUpdate, db: db_depende
 async def products_delete(id: int, db: db_dependency, user: User = Depends(get_current_user)):
 
     # delete product directly
-    result = await db.delete(select(Product).where(Product.id == id))
+    result = await db.execute(delete(Product).where(Product.id == id))
 
     # check how many rows were affected 
     if result.rowcount == 0:
