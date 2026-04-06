@@ -80,7 +80,7 @@ async def products_update(id: int, product_update: ProductUpdate, db: db_depende
             detail="Product not found"
             )
     
-    for key, value in product_update.dict(exclude_unset=True).items():
+    for key, value in product_update.model_dump(exclude_unset=True).items():
         setattr(product, key, value)
 
     await db.commit()
