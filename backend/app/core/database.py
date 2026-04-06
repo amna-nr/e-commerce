@@ -12,7 +12,10 @@ engine = create_async_engine(DATABASE_URL, echo=True)
 
 Base = declarative_base()
 
-AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    expire_on_commit=False
+)
 
 
 async def get_db():
