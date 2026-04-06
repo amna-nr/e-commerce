@@ -48,7 +48,7 @@ async def products_list(db: db_dependency, user: User = Depends(get_current_user
     
 
 # create new product
-@app.post("/products", response_model=list[ProductOut])
+@app.post("/products", response_model=ProductOut)
 async def products_create(product: ProductIn, db: db_dependency, user: User = Depends(get_current_user)):
 
     new_product = Product(
