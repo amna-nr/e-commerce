@@ -107,13 +107,6 @@ async def login(db: db_dependency, credentials: OAuth2PasswordRequestForm = Depe
 @router.post("/refresh")
 async def refresh(db: db_dependency, refresh_token: str = Cookie(...)):
    
-    # check if refresh token exists in redis 
-    if refresh_token is None: 
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Refresh token does not exist."
-        )
-    
     # get user id from token
     user_id = await redis_client.get(f"refresh:{refresh_token}")
 
