@@ -28,7 +28,7 @@ router = APIRouter(
     tags=["auth"]
 )
 
-oauth2_scheme = OAuth2PasswordBearer(tokenURL="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 # register endpoint
 @router.post("/register")
