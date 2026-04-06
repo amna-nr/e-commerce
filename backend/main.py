@@ -1,14 +1,9 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette import status 
 from contextlib import asynccontextmanager
-from app.core.redis import redis_client
-from sqlalchemy import select, delete
 
-from app.auth.auth import get_current_user, router as auth_router
-from app.core.database import db_dependency
-from app.models.models import User, Product
-from app.schemas.schemas import ProductIn, ProductOut, ProductUpdate
+from app.core.redis import redis_client
+from app.auth.router import router as auth_router
 
 
 # start redis on startup and close on shutdown
@@ -38,72 +33,3 @@ def home():
     return {"message": "welcome"}
 
 
-# show all products
-@app.get("/products", response_model=list[ProductOut])
-async def products_list(db: db_dependency, user: User = Depends(get_current_user)):
-
-    result = await db.execute(select(Product))
-    products = result.scalars().all()
-    return products
-    
-
-# create new product
-@app.post("/products", response_model=ProductOut)
-async def products_create(product: ProductIn, db: db_dependency, user: User = Depends(get_current_user)):
-
-    new_product = Product(
-        title = product.title,
-        price = product.price, 
-        stock = product.stock
-    )
-
-    db.add(new_product)
-
-    await db.commit()
-    await db.refresh(new_product)
-
-    return new_product
-
-
-# update existing product
-@app.put("/products/{id}")
-async def products_update(id: int, product_update: ProductUpdate, db: db_dependency, user: User = Depends(get_current_user)):
-
-    # get product from db
-    result = await db.execute(select(Product).where(Product.id == id))
-    product = result.scalar_one_or_none()
-
-    # check if product exists
-    if not product: 
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Product not found"
-            )
-    
-    for key, value in product_update.model_dump(exclude_unset=True).items():
-        setattr(product, key, value)
-
-    await db.commit()
-    await db.refresh(product)
-
-    return product
-
-
-# delete product 
-@app.delete("/products/{id}")
-async def products_delete(id: int, db: db_dependency, user: User = Depends(get_current_user)):
-
-    # delete product directly
-    result = await db.execute(delete(Product).where(Product.id == id))
-
-    # check how many rows were affected 
-    if result.rowcount == 0:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Product not found."
-            )
-    
-    # save changes 
-    await db.commit()
-
-    return {"message" : "Product has been deleted"}
