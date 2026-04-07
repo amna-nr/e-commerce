@@ -4,7 +4,10 @@ from contextlib import asynccontextmanager
 
 from app.core.redis import redis_client
 from app.auth.router import router as auth_router
+from app.core.logging import setup_logging, logger
 
+# configure logging
+setup_logging()
 
 # start redis on startup and close on shutdown
 @asynccontextmanager
@@ -31,5 +34,11 @@ app.add_middleware(
 @app.get("/")
 def home():
     return {"message": "welcome"}
+
+
+# log that app started 
+@app.on_event("startup")
+async def startup():
+    logger.info("app started")
 
 
