@@ -10,7 +10,6 @@ from app.core.database import db_dependency
 from app.auth.schemas import UserRegister
 from app.models.models import User
 from app.core.config import settings
-from app.auth.service import generate_access_token, get_user
 
 
 import bcrypt
