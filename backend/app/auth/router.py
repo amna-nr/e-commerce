@@ -10,6 +10,7 @@ from app.core.database import db_dependency
 from app.auth.schemas import UserRegister
 from app.models.models import User
 from app.core.config import settings
+from app.core.logging import logger
 
 
 import bcrypt
@@ -53,6 +54,8 @@ async def register(db: db_dependency, credentials: UserRegister):
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
+
+    logger.info("login successful", user_id=str(user.id))
 
     return {"message": "User has been created."}
 
