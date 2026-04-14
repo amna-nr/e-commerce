@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from app.core.redis import redis_client
 from app.auth.router import router as auth_router
+from app.products.router import router as products_router
 from app.core.logging import setup_logging, logger
 
 # configure logging
@@ -20,6 +21,7 @@ app = FastAPI(lifespan=lifespan)
 
 # include auth routes
 app.include_router(auth_router)
+app.include_router(products_router)
 
 # enable frontend to access backend on the browser
 app.add_middleware(
