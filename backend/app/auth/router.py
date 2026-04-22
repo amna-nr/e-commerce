@@ -43,7 +43,7 @@ async def register(db: db_dependency, credentials: UserRegister):
     if user: 
         logger.warning("register_failed_duplicate", username=credentials.username)
         raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            status_code=status.HTTP_409_CONFLICT,
             detail="Username already exists."
         )
     
