@@ -28,21 +28,23 @@ router = APIRouter(
 @router.post("/register")
 async def register(db: db_dependency, credentials: UserRegister):
 
+    # check if passwords match 
+    if credentials.password != credentials.confirm_password:
+        logger.warning("password_failed_password_mismatch")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Passwords don't match."
+        )
+
     # check if username already exists 
     result = await db.execute(select(User).where(User.username == credentials.username))
     user = result.scalar_one_or_none()
 
     if user: 
+        logger.warning("register_failed_duplicate", username=credentials.username)
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Username already exists."
-        )
-
-    # check if passwords match 
-    if credentials.password != credentials.confirm_password:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Passwords don't match."
         )
     
     # hash password 
@@ -54,7 +56,9 @@ async def register(db: db_dependency, credentials: UserRegister):
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
-    
+
+    logger.info("register_success", user_id=str(new_user.id))
+
 
     return {"message": "User has been created."}
 
