@@ -54,8 +54,7 @@ async def register(db: db_dependency, credentials: UserRegister):
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
-
-    logger.info("login successful", user_id=str(user.id))
+    
 
     return {"message": "User has been created."}
 
