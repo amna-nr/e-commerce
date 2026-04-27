@@ -72,13 +72,15 @@ async def login(db: db_dependency, credentials: OAuth2PasswordRequestForm = Depe
     user = result.scalar_one_or_none()
 
     if user is None: 
+        logger.warning("login_failed_not_found", username=credentials.username)
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found."
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials"
         )
     
     # check password in db vs users both hashed
     if not bcrypt.checkpw(credentials.password.encode("utf-8"), user.password_hash.encode("utf-8")):
+        logger.warning("login_failed_wrong_password", user_id=str(user.id))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password."
@@ -96,6 +98,7 @@ async def login(db: db_dependency, credentials: OAuth2PasswordRequestForm = Depe
                      user.id,
                      ex=REFRESH_TOKEN_EXPIRES_DAYS * 86400)
     
+    logger.info("login_success", user_id=str(user.id))
     # return both tokens 
     return {"access_token": access_token,
             "token_type": "bearer",
