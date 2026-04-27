@@ -144,6 +144,8 @@ async def refresh(db: db_dependency, refresh_token: str = Cookie(...)):
         ex=REFRESH_TOKEN_EXPIRES_DAYS * 86400
     )
 
+
+    logger.info("refresh_success", user_id=str(user.id))
     # return both tokens 
     return {
         "access_token": access_token,
