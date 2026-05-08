@@ -113,6 +113,7 @@ async def refresh(db: db_dependency, refresh_token: str = Cookie(...)):
     user_id = await redis_client.get(f"refresh:{refresh_token}")
 
     if user_id is None:
+        logger.warning("refresh_token_not_found")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token."
@@ -122,6 +123,7 @@ async def refresh(db: db_dependency, refresh_token: str = Cookie(...)):
     user = await get_user(db, user_id)
 
     if user is None:
+        logger.warning("user_not_found", user_id=str(user))
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found."
@@ -143,7 +145,6 @@ async def refresh(db: db_dependency, refresh_token: str = Cookie(...)):
         user.id,
         ex=REFRESH_TOKEN_EXPIRES_DAYS * 86400
     )
-
 
     logger.info("refresh_success", user_id=str(user.id))
     # return both tokens 

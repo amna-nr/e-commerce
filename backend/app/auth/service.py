@@ -73,6 +73,9 @@ def decode_jwt(token: str, SECRET_KEY: str, ALGORITHM: str):
         )
     return payload 
 
+
+
+
 # function to get user from db
 async def get_user (db: db_dependency, id: int):
     result = await db.execute(select(User).where(User.id == id))
