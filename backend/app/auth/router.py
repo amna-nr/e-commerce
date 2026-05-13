@@ -11,7 +11,7 @@ from app.auth.schemas import UserRegister
 from app.models.models import User
 from app.core.config import settings
 from app.core.logging import logger
-from main import limiter
+from app.core.limiter import limiter
 
 
 
@@ -68,7 +68,10 @@ async def register(request: Request, db: db_dependency, credentials: UserRegiste
 
 # login endpoint
 @router.post("/login")
-async def login(db: db_dependency, credentials: OAuth2PasswordRequestForm = Depends()):
+@limiter.limit("5/minute")
+async def login(request: Request, 
+                db: db_dependency, 
+                credentials: OAuth2PasswordRequestForm = Depends()):
 
     # check if user exists in db 
     result = await db.execute(select(User).where(User.username == credentials.username))
@@ -110,7 +113,8 @@ async def login(db: db_dependency, credentials: OAuth2PasswordRequestForm = Depe
 
 # refresh endpoint
 @router.post("/refresh")
-async def refresh(db: db_dependency, refresh_token: str = Cookie(...)):
+async def refresh(db: db_dependency,
+                  refresh_token: str = Cookie(...)):
    
     # get user id from token
     user_id = await redis_client.get(f"refresh:{refresh_token}")
