@@ -12,7 +12,7 @@ from app.core.logging import setup_logging, logger
 
 
 
-# start redis on startup and close on shutdown
+# start redis on startup and close on shutdown and add logging
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # configure logging
@@ -23,6 +23,7 @@ async def lifespan(app: FastAPI):
     await redis_client.aclose()
     logger.info("app_shutdown")
 
+# identify each caller by their ip address
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(lifespan=lifespan)
