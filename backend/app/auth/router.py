@@ -1,5 +1,5 @@
 # auth file routes and functions 
-from fastapi import APIRouter, HTTPException, Depends, Cookie
+from fastapi import APIRouter, HTTPException, Depends, Cookie, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from starlette import status 
@@ -11,6 +11,8 @@ from app.auth.schemas import UserRegister
 from app.models.models import User
 from app.core.config import settings
 from app.core.logging import logger
+from main import limiter
+
 
 
 import bcrypt
@@ -26,7 +28,8 @@ router = APIRouter(
 
 # register endpoint
 @router.post("/register")
-async def register(db: db_dependency, credentials: UserRegister):
+@limiter.limit("5/minute")
+async def register(request: Request, db: db_dependency, credentials: UserRegister):
 
     # check if passwords match 
     if credentials.password != credentials.confirm_password:
