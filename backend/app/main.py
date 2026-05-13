@@ -8,6 +8,7 @@ from slowapi.errors import RateLimitExceeded
 from app.core.redis import redis_client
 from app.auth.router import router as auth_router
 from app.products.router import router as products_router
+from app.routers.health import router as health_router
 from app.core.logging import setup_logging, logger
 
 
@@ -44,6 +45,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # include auth routes
 app.include_router(auth_router)
 app.include_router(products_router)
+app.include_router(health_router)
 
 
 @app.get("/")
