@@ -10,26 +10,22 @@ from app.auth.router import router as auth_router
 from app.products.router import router as products_router
 from app.core.logging import setup_logging, logger
 
-# configure logging
-setup_logging()
+
 
 # start redis on startup and close on shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # configure logging
+    setup_logging()
+    logger.info("app_started")
     await redis_client.ping()
     yield 
     await redis_client.aclose()
+    logger.info("app_shutdown")
 
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(lifespan=lifespan)
-
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-# include auth routes
-app.include_router(auth_router)
-app.include_router(products_router)
 
 # enable frontend to access backend on the browser
 app.add_middleware(
@@ -40,15 +36,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# set up rate limiting 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# include auth routes
+app.include_router(auth_router)
+app.include_router(products_router)
+
 
 @app.get("/")
 def home():
     return {"message": "welcome"}
-
-
-# log that app started 
-@app.on_event("startup")
-async def startup():
-    logger.info("app started")
-
-

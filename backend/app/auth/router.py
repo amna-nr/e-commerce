@@ -86,7 +86,7 @@ async def login(db: db_dependency, credentials: OAuth2PasswordRequestForm = Depe
         logger.warning("login_failed_wrong_password", user_id=str(user.id))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect password."
+            detail="Invalid credentials."
         )
     
     # generate access token
