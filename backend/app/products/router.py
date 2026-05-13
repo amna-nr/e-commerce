@@ -18,9 +18,12 @@ router = APIRouter(
 
 # show all products
 @router.get("/", response_model=list[ProductOut])
-async def products_list(db: db_dependency, user: User = Depends(get_current_user)):
+async def products_list(db: db_dependency, 
+                        user: User = Depends(get_current_user),
+                        skip: int = 0,
+                        limit: int = 20):
 
-    result = await db.execute(select(Product))
+    result = await db.execute(select(Product).offset(skip).limit(limit))
     products = result.scalars().all()
     return products
     
